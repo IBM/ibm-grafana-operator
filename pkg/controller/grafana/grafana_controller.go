@@ -18,13 +18,13 @@ package grafana
 import (
 	"context"
 
-	secv1client "github.com/openshift/client-go/security/clientset/versioned/typed/security/v1"
 	dbv1 "github.ibm.com/IBMPrivateCloud/grafana-dashboard-crd/pkg/apis/monitoringcontroller/v1"
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
+	ingressv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	secv1client "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -109,7 +109,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	err = c.Watch(&source.Kind{Type: &v1beta1.Ingress{}}, &handler.EnqueueRequestForOwner{
+	err = c.Watch(&source.Kind{Type: &ingressv1.Ingress{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &v1alpha1.Grafana{},
 	})
@@ -144,7 +144,7 @@ type ReconcileGrafana struct {
 	// This client reads objects from apiserver directly
 	kclient client.Reader
 	// This client is for SCC creation
-	secClient secv1client.SecurityV1Interface
+	secClient secv1client.Interface
 	recorder  record.EventRecorder
 }
 
@@ -155,13 +155,13 @@ type ReconcileGrafana struct {
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
-func (r *ReconcileGrafana) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (r *ReconcileGrafana) Reconcile(context context.Context, request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	reqLogger.Info("Reconciling Grafana")
 
 	// Fetch the Grafana instance
 	instance := &v1alpha1.Grafana{}
-	err := r.client.Get(r.ctx, request.NamespacedName, instance)
+	err := r.client.Get(context, request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.

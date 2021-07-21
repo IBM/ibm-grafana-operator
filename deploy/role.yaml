@@ -145,6 +145,18 @@ rules:
   - patch
   - delete
 - apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingresses
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
   - monitoringcontroller.cloud.ibm.com
   resources:
   - monitoringdashboards

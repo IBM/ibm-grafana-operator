@@ -20,7 +20,7 @@ import (
 
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
+	ingressv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -317,7 +317,7 @@ func createGrafanaService(r *ReconcileGrafana, cr *v1alpha1.Grafana) error {
 func reconcileGrafanaIngress(r *ReconcileGrafana, cr *v1alpha1.Grafana) error {
 
 	selector := utils.GrafanaIngressSelector(cr)
-	route := &v1beta1.Ingress{}
+	route := &ingressv1.Ingress{}
 	err := r.client.Get(r.ctx, selector, route)
 	if err != nil {
 		if errors.IsNotFound(err) {

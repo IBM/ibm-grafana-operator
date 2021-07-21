@@ -16,9 +16,8 @@
 package model
 
 import (
-	"k8s.io/api/extensions/v1beta1"
+	ingressv1 "k8s.io/api/networking/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/IBM/ibm-monitoring-grafana-operator/pkg/apis/operator/v1alpha1"
@@ -54,20 +53,23 @@ func GetIngressAnnotations(cr *v1alpha1.Grafana) map[string]string {
 	return annotations
 }
 
-func getIngressSpec() v1beta1.IngressSpec {
-	return v1beta1.IngressSpec{
-		Rules: []v1beta1.IngressRule{
+func getIngressSpec() ingressv1.IngressSpec {
+	pathType := ingressv1.PathType("ImplementationSpecific")
+	return ingressv1.IngressSpec{
+		Rules: []ingressv1.IngressRule{
 			{
-				IngressRuleValue: v1beta1.IngressRuleValue{
-					HTTP: &v1beta1.HTTPIngressRuleValue{
-						Paths: []v1beta1.HTTPIngressPath{
+				IngressRuleValue: ingressv1.IngressRuleValue{
+					HTTP: &ingressv1.HTTPIngressRuleValue{
+						Paths: []ingressv1.HTTPIngressPath{
 							{
-								Path: "/grafana",
-								Backend: v1beta1.IngressBackend{
-									ServiceName: GrafanaServiceName,
-									ServicePort: intstr.IntOrString{
-										Type:   intstr.Int,
-										IntVal: DefaultGrafanaPort,
+								Path:     "/grafana",
+								PathType: &pathType,
+								Backend: ingressv1.IngressBackend{
+									Service: &ingressv1.IngressServiceBackend{
+										Name: GrafanaServiceName,
+										Port: ingressv1.ServiceBackendPort{
+											Number: DefaultGrafanaPort,
+										},
 									},
 								},
 							},
@@ -79,8 +81,8 @@ func getIngressSpec() v1beta1.IngressSpec {
 	}
 }
 
-func GrafanaIngress(cr *v1alpha1.Grafana) *v1beta1.Ingress {
-	return &v1beta1.Ingress{
+func GrafanaIngress(cr *v1alpha1.Grafana) *ingressv1.Ingress {
+	return &ingressv1.Ingress{
 		ObjectMeta: v1.ObjectMeta{
 			Name:        GrafanaIngressName,
 			Namespace:   cr.Namespace,
@@ -91,7 +93,7 @@ func GrafanaIngress(cr *v1alpha1.Grafana) *v1beta1.Ingress {
 	}
 }
 
-func ReconciledGrafanaIngress(cr *v1alpha1.Grafana, current *v1beta1.Ingress) *v1beta1.Ingress {
+func ReconciledGrafanaIngress(cr *v1alpha1.Grafana, current *ingressv1.Ingress) *ingressv1.Ingress {
 
 	reconciled := current.DeepCopy()
 	spec := getIngressSpec()
