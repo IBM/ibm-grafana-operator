@@ -49,7 +49,7 @@ spec:
           image: quay.io/opencloudio/ibm-monitoring-grafana-operator
           command:
             - ibm-monitoring-grafana-operator
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           securityContext:
             privileged: false
             allowPrivilegeEscalation: false
